@@ -24,15 +24,15 @@ class SampleSet(object):
         index = int(len(fit_samples) * percentile)
         return fit_samples[:index]
 
-    def generate_mutual_information_graph(self):
-        pass
-
 
 class Distribution(object):
     def __init__(self):
         pass
 
     def generate_samples(self):
+        pass
+
+    def generate_mutual_information_graph(self, samples):
         pass
 
 
