@@ -1,7 +1,8 @@
 class Mimic(object):
-    def __init__(self, bitstring_length, cost_function):
-        self.sample_set = SampleSet(bitstring_length)
-        self.cost_function = cost_function
+    def __init__(self, bitstring_length, fitness_function):
+        self.distribution = InitialDistribution(bitstring_length)
+        self.sample_set = SampleSet(self.distribution, fitness_function)
+        self.fitness_function = fitness_function
         self.distribution = Distribution()
 
     def fit(self, percentile):
@@ -33,3 +34,8 @@ class Distribution(object):
 
     def generate_samples(self):
         pass
+
+
+class InitialDistribution(Distribution):
+    def __init__(self, bitstring_length):
+        self.bitstring_length = bitstring_length
