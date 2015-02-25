@@ -37,7 +37,7 @@ class SampleSet(object):
             key=self.fitness_function,
             reverse=self.maximize,
         )
-        return np.matrix(sorted_samples)
+        return np.array(sorted_samples)
 
     def get_percentile(self, percentile):
         fit_samples = self.calculate_fitness()
