@@ -22,8 +22,6 @@ class SampleSet(object):
         self.fitness_function = fitness_function
         self.maximize = maximize
 
-        self.complete_graph = self._generate_mutual_information_graph()
-
     def calculate_fitness(self):
         sorted_samples = sorted(
             self.samples,
@@ -37,7 +35,19 @@ class SampleSet(object):
         index = int(len(fit_samples) * percentile)
         return fit_samples[:index]
 
-    # Consider using a property decorator here.
+
+class Distribution(object):
+    def __init__(self, samples):
+        self.samples = samples
+        self.complete_graph = self._generate_mutual_information_graph()
+        self.spanning_graph = self._generate_spanning_graph()
+
+    def generate_samples(self):
+        pass
+
+    def _generate_spanning_graph(self):
+        return nx.prim_mst(self.complete_graph)
+
     def _generate_mutual_information_graph(self):
         samples = np.asarray(self.samples)
         complete_graph = nx.complete_graph(samples.shape[0])
@@ -48,19 +58,3 @@ class SampleSet(object):
             complete_graph.edge[edge[0]][edge[1]]['weight'] = -mutual_info
 
         return complete_graph
-
-
-class Distribution(object):
-    def __init__(self):
-        pass
-
-    def generate_samples(self):
-        pass
-
-    def generate_mutual_information_graph(self, samples):
-        pass
-
-
-class InitialDistribution(Distribution):
-    def __init__(self, bitstring_length):
-        self.bitstring_length = bitstring_length
