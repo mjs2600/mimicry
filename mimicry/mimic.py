@@ -1,19 +1,28 @@
 import networkx as nx
 # import matplotlib.pyplot as plt
 import numpy as np
-
+import random
 from sklearn.metrics import mutual_info_score
 
 
 class Mimic(object):
-    def __init__(self, bitstring_length, fitness_function):
-        self.distribution = InitialDistribution(bitstring_length)
-        self.sample_set = SampleSet(self.distribution, fitness_function)
+    def __init__(self, domain, fitness_function, samples=50):
+        self.domain = domain
+        self.samples = samples
+        initial_samples = np.array(self._generate_initial_samples())
+        self.sample_set = SampleSet(initial_samples, fitness_function)
         self.fitness_function = fitness_function
-        self.distribution = Distribution()
 
     def fit(self, percentile):
-        pass
+        samples = self.sample_set.get_percentile(percentile)
+        self.distribution = Distribution(samples)
+
+    def _generate_initial_samples(self):
+        return [self._generate_initial_sample() for i in xrange(self.samples)]
+
+    def _generate_initial_sample(self):
+        return [random.randint(self.domain[i][0], self.domain[i][1])
+                for i in range(len(self.domain))]
 
 
 class SampleSet(object):

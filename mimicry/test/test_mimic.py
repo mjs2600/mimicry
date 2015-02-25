@@ -1,9 +1,23 @@
 import unittest
+import random
 from mimicry import mimic
 # import networkx as nx
 # import matplotlib.pyplot as plt
-
 import numpy as np
+
+
+class TestMimic(unittest.TestCase):
+    def test_inital_samples(self):
+        random.seed(0)
+
+        domain = [(0, 1)] * 10
+        m = mimic.Mimic(domain, sum)
+        expected_results = [
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1, 0, 1, 1, 1, 1],
+        ]
+        top_samples = m.sample_set.get_percentile(.04)
+        self.assertTrue(np.equal(top_samples, expected_results).all())
 
 
 class TestSampleSet(unittest.TestCase):
