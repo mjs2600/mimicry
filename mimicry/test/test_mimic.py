@@ -3,6 +3,8 @@ from mimicry import mimic
 import networkx as nx
 import matplotlib.pyplot as plt
 
+import numpy as np
+
 
 class TestSampleSet(unittest.TestCase):
     def test_get_precentile(self):
