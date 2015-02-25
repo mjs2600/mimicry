@@ -1,8 +1,9 @@
 import networkx as nx
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import numpy as np
 
 from sklearn.metrics import mutual_info_score
+
 
 class Mimic(object):
     def __init__(self, bitstring_length, fitness_function):
@@ -44,13 +45,9 @@ class SampleSet(object):
         for edge in complete_graph.edges():
             mutual_info = mutual_info_score(samples[edge[0]], samples[edge[1]])
 
-            complete_graph.edge[edge[0]][edge[1]]['weight'] = mutual_info
+            complete_graph.edge[edge[0]][edge[1]]['weight'] = -mutual_info
 
         return complete_graph
-
-
-
-
 
 
 class Distribution(object):
