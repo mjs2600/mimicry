@@ -54,6 +54,17 @@ class Distribution(object):
     def generate_samples(self):
         pass
 
+    def _generate_bayes_net(self):
+        # Pseudo Code
+        # 1. Start at any node(probably 0 since that will be the easiest for
+        # indexing)
+        # 2. At each node figure out the conditional probability
+        # 3. Add it to the new graph (which should probably be directed)
+        # 4. Find unprocessed adjacent nodes
+        # 5. If any go to 2
+        #    Else return the bayes net
+        pass
+
     def _generate_spanning_graph(self):
         return nx.prim_mst(self.complete_graph)
 
