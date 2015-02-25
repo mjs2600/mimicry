@@ -12,13 +12,15 @@ class TestSampleSet(unittest.TestCase):
             [0, 1, 1],
             [1, 1, 1],
         ]
-        expected_results = [
-            (3, [1, 1, 1]),
-            (2, [0, 1, 1]),
-        ]
+        expected_results = np.matrix([
+            [1, 1, 1],
+            [0, 1, 1],
+        ])
         sample_set = mimic.SampleSet(samples, sum)
 
-        self.assertEqual(sample_set.get_percentile(0.5), expected_results)
+        self.assertTrue(
+            np.equal(sample_set.get_percentile(0.5), expected_results).all()
+        )
 
     def test__generate_mutual_information_graph(self):
         samples = [
