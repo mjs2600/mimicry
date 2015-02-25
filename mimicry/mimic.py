@@ -51,7 +51,7 @@ class Distribution(object):
         self.complete_graph = self._generate_mutual_information_graph()
         self.spanning_graph = self._generate_spanning_graph()
 
-    def generate_samples(self):
+    def generate_samples(self, domain):
         pass
 
     def _generate_bayes_net(self):
