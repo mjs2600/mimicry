@@ -1,7 +1,7 @@
 import unittest
 import random
 from mimicry import mimic
-# import networkx as nx
+import networkx as nx
 # import matplotlib.pyplot as plt
 import numpy as np
 
@@ -102,6 +102,30 @@ class TestDistribution(unittest.TestCase):
         # edge_labels=edge_labels)
 
         # plt.show()
+
+    def test_generate_samples(self):
+        expected_results = np.array([[1, 0, 1, 1]])
+        graph=nx.DiGraph()
+
+        graph.add_node(0, probabilities={0: 0, 1: 1})
+        graph.add_node(1, probabilities={0: {0: 0, 1: 1}, 1: {0: 1, 1: 0}})
+        graph.add_node(2, probabilities={0: {0: 0, 1: 1}, 1: {0: 1, 1: 0}})
+        graph.add_node(3, probabilities={0: {0: 0, 1: 1}, 1: {0: 1, 1: 0}})
+
+        graph.add_edges_from([
+            (0, 1),
+            (1, 2),
+            (1, 3),
+        ])
+
+        distribution = mimic.Distribution([[0, 0], [0, 0]])
+        distribution.bayes_net = graph
+
+        self.assertTrue(np.equal(
+            expected_results,
+            distribution.generate_samples(1),
+        ).all())
+
 
 if __name__ == '__main__':
         unittest.main()
