@@ -1,8 +1,10 @@
 import networkx as nx
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import numpy as np
 import random
 from sklearn.metrics import mutual_info_score
+
+import copy
 
 
 class Mimic(object):
@@ -62,15 +64,31 @@ class Distribution(object):
         # 3. Add it to the new graph (which should probably be directed)
         # 4. Find unprocessed adjacent nodes
         # 5. If any go to 2
-        #    Else return the bayes net
-        pass
+        #    Else return the bayes net'
+
+        samples = np.asarray(self.samples)
+        self.bayes_net = copy.deepcopy(self.spanning_graph)
+
+        # Pick root node, then use this to find paths from root to all others?
+        print(nx.all_simple_paths(self.bayes_net,0,3).next())
+
+        for node_ind in self.bayes_net.nodes():
+            node_array = samples[:, node_ind]
+
+            unconditional_distr = np.histogram(node_array,
+                                              (np.max(node_array)+1))[0] / float(node_array.shape[0])
+
+            print(self.bayes_net.successors(node_ind))
+            self.bayes_net.node[node_ind] = unconditional_distr
+            print(self.bayes_net.node[node_ind])
+
 
     def _generate_spanning_graph(self):
-        return nx.prim_mst(self.complete_graph)
+        return nx.prim_mst(self.complete_graph).to_directed()
 
     def _generate_mutual_information_graph(self):
         samples = np.asarray(self.samples)
-        complete_graph = nx.complete_graph(samples.shape[0])
+        complete_graph = nx.complete_graph(samples.shape[1])
 
         for edge in complete_graph.edges():
             mutual_info = mutual_info_score(samples[edge[0]], samples[edge[1]])
@@ -78,3 +96,34 @@ class Distribution(object):
             complete_graph.edge[edge[0]][edge[1]]['weight'] = -mutual_info
 
         return complete_graph
+
+
+if __name__ == "__main__":
+    samples = [
+        [0, 0, 0, 1],
+        [1, 0, 1, 1],
+        [0, 1, 1, 0],
+        [1, 1, 1, 1],
+        [1, 1, 1, 0],
+    ]
+
+
+    distribution = Distribution(samples)
+
+    distribution._generate_bayes_net()
+
+    # self.assertEqual(
+    #     expected_results,
+    #     distribution.spanning_graph.edges(data=True),
+    # )
+
+    pos = nx.spring_layout(distribution.spanning_graph)
+
+    edge_labels=dict([((u,v,),d['weight'])
+    for u,v,d in distribution.spanning_graph.edges(data=True)])
+
+    nx.draw_networkx(distribution.spanning_graph, pos)
+    nx.draw_networkx_edge_labels(distribution.spanning_graph,pos,
+    edge_labels=edge_labels)
+
+    plt.show()
