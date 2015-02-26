@@ -4,7 +4,6 @@ import numpy as np
 import random
 from scipy import stats
 from sklearn.metrics import mutual_info_score
-import copy
 
 
 class Mimic(object):
@@ -58,15 +57,19 @@ class Distribution(object):
         samples = np.zeros((number_to_generate, sample_len))
         values = self.bayes_net.node[0]["probabilities"].keys()
         probabilities = self.bayes_net.node[0]["probabilities"].values()
-        dist = stats.rv_discrete(values=(values, probabilities))
+        dist = stats.rv_discrete(name="dist", values=(values, probabilities))
         samples[:, 0] = dist.rvs(size=number_to_generate)
         for parent, current in self.bayes_net.edges_iter():
             for i in xrange(number_to_generate):
                 parent_val = samples[i, parent]
-                cond_dist = self.bayes_net.node[current]["probabilities"][parent_val]
+                current_node = self.bayes_net.node[current]
+                cond_dist = current_node["probabilities"][parent_val]
                 values = cond_dist.keys()
                 probabilities = cond_dist.values()
-                dist = stats.rv_discrete(values=(values, probabilities))
+                dist = stats.rv_discrete(
+                    name="dist",
+                    values=(values, probabilities)
+                )
                 samples[i, current] = dist.rvs()
 
         return samples
