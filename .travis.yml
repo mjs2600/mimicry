@@ -7,8 +7,7 @@ before_install:
       - sudo apt-get install -qq python-numpy python-scipy python-matplotlib
 
 # command to install dependencies
-install: "pip install scikit-learn"
-install: "pip install networkx"
+install: "pip install scikit-learn networkx"
 
 # command to run tests
 script: "python -m unittest discover mimicry/test"
