@@ -2,6 +2,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import numpy as np
 import random
+from scipy import stats
 from sklearn.metrics import mutual_info_score
 
 np.set_printoptions(precision=4)
@@ -52,8 +53,23 @@ class Distribution(object):
         self.complete_graph = self._generate_mutual_information_graph()
         self.spanning_graph = self._generate_spanning_graph()
 
-    def generate_samples(self, domain):
-        pass
+    def generate_samples(self, number_to_generate):
+        sample_len = len(self.bayes_net.node)
+        samples = np.zeros((number_to_generate, sample_len))
+        values = self.bayes_net.node[0]["probabilities"].keys()
+        probabilities = self.bayes_net.node[0]["probabilities"].values()
+        dist = stats.rv_discrete(values=(values, probabilities))
+        samples[:, 0] = dist.rvs(size=number_to_generate)
+        for parent, current in self.bayes_net.edges_iter():
+            for i in xrange(number_to_generate):
+                parent_val = samples[i, parent]
+                cond_dist = self.bayes_net.node[current]["probabilities"][parent_val]
+                values = cond_dist.keys()
+                probabilities = cond_dist.values()
+                dist = stats.rv_discrete(values=(values, probabilities))
+                samples[i, current] = dist.rvs()
+
+        return samples
 
     def _generate_bayes_net(self):
         # Pseudo Code
