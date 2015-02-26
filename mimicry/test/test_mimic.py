@@ -51,10 +51,7 @@ class TestDistribution(unittest.TestCase):
         expected_results = [
             (0, 1, {'weight': -5.5511151231257827e-17}),
             (0, 2, {'weight': -5.5511151231257827e-17}),
-            (0, 3, {'weight': -0.0}),
             (1, 2, {'weight': -0.1744160479215161}),
-            (1, 3, {'weight': -5.5511151231257827e-17}),
-            (2, 3, {'weight': -5.5511151231257827e-17}),
         ]
 
         distribution = mimic.Distribution(samples)
@@ -84,16 +81,15 @@ class TestDistribution(unittest.TestCase):
         ]
 
         expected_results = [
-            (0, 1, {'weight': -5.5511151231257827e-17}),
-            (1, 2, {'weight': -0.1744160479215161}),
-            (1, 3, {'weight': -5.5511151231257827e-17})
+            (0, 1),
+            (1, 2),
         ]
 
         distribution = mimic.Distribution(samples)
 
         self.assertEqual(
             expected_results,
-            distribution.spanning_graph.edges(data=True),
+            distribution.spanning_graph.edges(),
         )
 
         # pos = nx.spring_layout(sample_set.complete_graph)
