@@ -15,7 +15,6 @@ setup(
         "numpy >= 1.8, <2.0",
         "networkx >= 1.9.1, <2.0",
         "scikit-learn >= 0.15.2, <1.0",
-        "matplotlib >= 1.4.3, <1.5",
-        "scipy >= 0.15.0, <1.0",
+        "matplotlib >= 1.3.0, <1.5",
     ],
 )

@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import random
 from sklearn.metrics import mutual_info_score
-import copy
 
+np.set_printoptions(precision=4)
 
 class Mimic(object):
     def __init__(self, domain, fitness_function, samples=50):
@@ -65,21 +65,59 @@ class Distribution(object):
         # 5. If any go to 2
         #    Else return the bayes net'
 
+        # Will it be possible that zero is not the root? If so, we need to pick one
+        root = 0
+
         samples = np.asarray(self.samples)
 
-        self.bayes_net = nx.bfs_tree(self.spanning_graph, 0)
+        self.bayes_net = nx.bfs_tree(self.spanning_graph, root)
 
-        for node_ind in self.bayes_net.nodes():
-            node_array = samples[:, node_ind]
+        # print(self.bayes_net.edges())
 
-            unconditional_distr = np.histogram(
-                node_array,
-                (np.max(node_array)+1),
-            )[0] / float(node_array.shape[0])
+        for parent, child in self.bayes_net.edges():
+            #Check if probabilities have already been calculated for parent
 
-            print(self.bayes_net.successors(node_ind))
-            self.bayes_net.node[node_ind] = unconditional_distr
-            print(self.bayes_net.node[node_ind])
+            if not self.bayes_net.node[parent]:
+                parent_array = samples[:, parent]
+
+                parent_probs = np.histogram(parent_array,
+                                            (np.max(parent_array)+1),
+                                            )[0] / float(parent_array.shape[0])
+
+                self.bayes_net.node[parent] = dict(enumerate(parent_probs))
+
+            else:
+                # if this is the case, the parent already has a set of cond. probs.
+                # so we need to add together the probabilities from each condition
+                # to get the total probability of each value
+
+                parent_probs=[0]*len(self.bayes_net.node[parent].keys())
+                for condition, probability in self.bayes_net.node[parent].iteritems():
+                    for index,_ in enumerate(parent_probs):
+                        parent_probs[index] += probability[index]
+
+            child_array = samples[:, child]
+            child_probs = np.histogram(child_array,
+                                       (np.max(child_array)+1),
+                                       )[0] / float(child_array.shape[0])
+
+            for condition, probability in self.bayes_net.node[parent].iteritems():
+                if type(probability).__module__ == np.__name__:
+                    # parent already has cond. probs, use probs calculated in "else" above
+                    self.bayes_net.node[child][condition] = parent_probs[condition]*child_probs
+                else:
+                    self.bayes_net.node[child][condition] = probability*child_probs
+
+        # Needed to leave probabilities as numpy arrays to facilitate calculations
+        # Couldn't think of a slicker way to convert them to final form as dicts
+        for key, node in self.bayes_net.node.iteritems():
+            if key == root:
+                continue
+            for key, item in node.iteritems():
+                node[key] = dict(enumerate(item))
+
+
+
 
     def _generate_spanning_graph(self):
         return nx.prim_mst(self.complete_graph)
@@ -103,16 +141,16 @@ if __name__ == "__main__":
         [0, 1, 1, 0],
         [1, 1, 1, 1],
         [1, 1, 1, 0],
+        [0, 0, 1, 1],
+        [1, 0, 0, 0],
     ]
 
     distribution = Distribution(samples)
 
     distribution._generate_bayes_net()
 
-    # self.assertEqual(
-    #     expected_results,
-    #     distribution.spanning_graph.edges(data=True),
-    # )
+    for node_ind in distribution.bayes_net.nodes():
+            print(distribution.bayes_net.node[node_ind])
 
     pos = nx.spring_layout(distribution.spanning_graph)
 
