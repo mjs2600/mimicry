@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import random
 from sklearn.metrics import mutual_info_score
-
 import copy
 
 
@@ -67,24 +66,23 @@ class Distribution(object):
         #    Else return the bayes net'
 
         samples = np.asarray(self.samples)
-        self.bayes_net = copy.deepcopy(self.spanning_graph)
 
-        # Pick root node, then use this to find paths from root to all others?
-        print(nx.all_simple_paths(self.bayes_net,0,3).next())
+        self.bayes_net = nx.bfs_tree(self.spanning_graph, 0)
 
         for node_ind in self.bayes_net.nodes():
             node_array = samples[:, node_ind]
 
-            unconditional_distr = np.histogram(node_array,
-                                              (np.max(node_array)+1))[0] / float(node_array.shape[0])
+            unconditional_distr = np.histogram(
+                node_array,
+                (np.max(node_array)+1),
+            )[0] / float(node_array.shape[0])
 
             print(self.bayes_net.successors(node_ind))
             self.bayes_net.node[node_ind] = unconditional_distr
             print(self.bayes_net.node[node_ind])
 
-
     def _generate_spanning_graph(self):
-        return nx.prim_mst(self.complete_graph).to_directed()
+        return nx.prim_mst(self.complete_graph)
 
     def _generate_mutual_information_graph(self):
         samples = np.asarray(self.samples)
@@ -107,7 +105,6 @@ if __name__ == "__main__":
         [1, 1, 1, 0],
     ]
 
-
     distribution = Distribution(samples)
 
     distribution._generate_bayes_net()
@@ -119,11 +116,16 @@ if __name__ == "__main__":
 
     pos = nx.spring_layout(distribution.spanning_graph)
 
-    edge_labels=dict([((u,v,),d['weight'])
-    for u,v,d in distribution.spanning_graph.edges(data=True)])
+    edge_labels = dict(
+        [((u, v,), d['weight'])
+         for u, v, d in distribution.spanning_graph.edges(data=True)]
+    )
 
     nx.draw_networkx(distribution.spanning_graph, pos)
-    nx.draw_networkx_edge_labels(distribution.spanning_graph,pos,
-    edge_labels=edge_labels)
+    nx.draw_networkx_edge_labels(
+        distribution.spanning_graph,
+        pos,
+        edge_labels=edge_labels,
+    )
 
     plt.show()
