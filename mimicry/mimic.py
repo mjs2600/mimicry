@@ -9,16 +9,19 @@ np.set_printoptions(precision=4)
 
 
 class Mimic(object):
-    def __init__(self, domain, fitness_function, samples=50):
+    def __init__(self, domain, fitness_function, samples=1000, percentile=50):
         self.domain = domain
         self.samples = samples
         initial_samples = np.array(self._generate_initial_samples())
         self.sample_set = SampleSet(initial_samples, fitness_function)
         self.fitness_function = fitness_function
+        self.percentile = percentile
 
-    def fit(self, percentile):
-        samples = self.sample_set.get_percentile(percentile)
+    def fit(self):
+        samples = self.sample_set.get_percentile(self.percentile)
         self.distribution = Distribution(samples)
+        self.sample_set = SampleSet(self.distribution.generate_samples())
+        return self.sample_set.get_percentile(self.percentile)
 
     def _generate_initial_samples(self):
         return [self._generate_initial_sample() for i in xrange(self.samples)]
