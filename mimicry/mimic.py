@@ -92,12 +92,11 @@ class Distribution(object):
 
         self.bayes_net = nx.bfs_tree(self.spanning_graph, root)
 
-        # print(self.bayes_net.edges())
 
         for parent, child in self.bayes_net.edges():
             #Check if probabilities have already been calculated for parent
 
-            if not self.bayes_net.node[parent]:
+            if not self.bayes_net.predecessors(parent):
                 parent_array = samples[:, parent]
 
                 parent_probs = np.histogram(parent_array,
@@ -156,7 +155,7 @@ class Distribution(object):
 
 if __name__ == "__main__":
     samples = [
-        [0, 0, 0, 1],
+        [1, 0, 0, 1],
         [1, 0, 1, 1],
         [0, 1, 1, 0],
         [1, 1, 1, 1],
