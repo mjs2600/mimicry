@@ -96,8 +96,10 @@ class Distribution(object):
         for parent, child in self.bayes_net.edges():
             #Check if probabilities have already been calculated for parent
 
+            parent_array = samples[:, parent]
+
             if not self.bayes_net.predecessors(parent):
-                parent_array = samples[:, parent]
+
 
                 parent_probs = np.histogram(parent_array,
                                             (np.max(parent_array)+1),
@@ -105,35 +107,24 @@ class Distribution(object):
 
                 self.bayes_net.node[parent] = dict(enumerate(parent_probs))
 
-            else:
-                # if this is the case, the parent already has a set of cond. probs.
-                # so we need to add together the probabilities from each condition
-                # to get the total probability of each value
-
-                parent_probs=[0]*len(self.bayes_net.node[parent].keys())
-                for condition, probability in self.bayes_net.node[parent].iteritems():
-                    for index,_ in enumerate(parent_probs):
-                        parent_probs[index] += probability[index]
-
             child_array = samples[:, child]
-            child_probs = np.histogram(child_array,
-                                       (np.max(child_array)+1),
-                                       )[0] / float(child_array.shape[0])
 
-            for condition, probability in self.bayes_net.node[parent].iteritems():
-                if type(probability).__module__ == np.__name__:
-                    # parent already has cond. probs, use probs calculated in "else" above
-                    self.bayes_net.node[child][condition] = parent_probs[condition]*child_probs
-                else:
-                    self.bayes_net.node[child][condition] = probability*child_probs
 
-        # Needed to leave probabilities as numpy arrays to facilitate calculations
-        # Couldn't think of a slicker way to convert them to final form as dicts
-        for key, node in self.bayes_net.node.iteritems():
-            if key == root:
-                continue
-            for key, item in node.iteritems():
-                node[key] = dict(enumerate(item))
+            for parent_val in np.unique(parent_array):
+                print(parent_val)
+                parent_inds = np.argwhere(parent_array == parent_val)
+                sub_child = child_array[parent_inds.flatten()]
+                print(sub_child)
+
+                child_probs = np.histogram(sub_child,
+                                       (np.max(sub_child)+1),
+                                       )[0] / float(sub_child.shape[0])
+
+                if child_probs.shape[0] == 1:
+                    child_probs = np.append(child_probs, 0.)
+                self.bayes_net.node[child][parent_val] = dict(enumerate(child_probs))
+
+
 
 
 
@@ -158,9 +149,9 @@ if __name__ == "__main__":
         [1, 0, 0, 1],
         [1, 0, 1, 1],
         [0, 1, 1, 0],
-        [1, 1, 1, 1],
-        [1, 1, 1, 0],
-        [0, 0, 1, 1],
+        [0, 1, 1, 1],
+        [0, 1, 1, 0],
+        [1, 0, 1, 1],
         [1, 0, 0, 0],
     ]
 
