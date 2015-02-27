@@ -94,13 +94,11 @@ class Distribution(object):
 
 
         for parent, child in self.bayes_net.edges():
-            #Check if probabilities have already been calculated for parent
 
             parent_array = samples[:, parent]
 
+            #Check if node is root
             if not self.bayes_net.predecessors(parent):
-
-
                 parent_probs = np.histogram(parent_array,
                                             (np.max(parent_array)+1),
                                             )[0] / float(parent_array.shape[0])
@@ -109,22 +107,22 @@ class Distribution(object):
 
             child_array = samples[:, child]
 
-
-            for parent_val in np.unique(parent_array):
-                print(parent_val)
+            unique_parents = np.unique(parent_array)
+            for parent_val in unique_parents:
                 parent_inds = np.argwhere(parent_array == parent_val)
-                sub_child = child_array[parent_inds.flatten()]
-                print(sub_child)
+                sub_child = child_array[parent_inds]
 
                 child_probs = np.histogram(sub_child,
                                        (np.max(sub_child)+1),
                                        )[0] / float(sub_child.shape[0])
 
-                if child_probs.shape[0] == 1:
+                # If P(0) = 1 then child_probs = [1.]
+                # must append zeros to ensure output consistency
+                while child_probs.shape[0] < unique_parents.shape[0]:
                     child_probs = np.append(child_probs, 0.)
                 self.bayes_net.node[child][parent_val] = dict(enumerate(child_probs))
 
-
+            self.bayes_net.node[child] = dict(probabilities=self.bayes_net.node[child])
 
 
 
