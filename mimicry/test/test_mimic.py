@@ -11,13 +11,24 @@ class TestMimic(unittest.TestCase):
         random.seed(0)
 
         domain = [(0, 1)] * 10
-        m = mimic.Mimic(domain, sum)
+        m = mimic.Mimic(domain, sum, samples=100)
         expected_results = [
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
             [1, 1, 1, 1, 1, 0, 1, 1, 1, 1],
+            [1, 1, 0, 1, 1, 0, 1, 1, 1, 1],
+            [1, 1, 1, 0, 1, 0, 1, 1, 1, 1],
         ]
         top_samples = m.sample_set.get_percentile(.04)
         self.assertTrue(np.equal(top_samples, expected_results).all())
+
+    def test_mimic(self):
+        domain = [(0, 1)] * 15
+        m = mimic.Mimic(domain, sum, samples=100)
+        for i in xrange(20):
+            # print np.average([sum(sample) for sample in m.fit()[:5]])
+            m.fit()
+        results = m.fit()
+        self.assertTrue(results[0].all())
 
 
 class TestSampleSet(unittest.TestCase):
@@ -49,9 +60,9 @@ class TestDistribution(unittest.TestCase):
         ]
 
         expected_results = [
-            (0, 1, {'weight': -5.5511151231257827e-17}),
-            (0, 2, {'weight': -5.5511151231257827e-17}),
-            (1, 2, {'weight': -0.1744160479215161}),
+            (0, 1, {'weight': -0.21576155433883565}),
+            (0, 2, {'weight': -0.084949518397698542}),
+            (1, 2, {'weight': -0.21576155433883565}),
         ]
 
         distribution = mimic.Distribution(samples)
@@ -105,7 +116,7 @@ class TestDistribution(unittest.TestCase):
 
     def test_generate_samples(self):
         expected_results = np.array([[1, 0, 1, 1]])
-        graph=nx.DiGraph()
+        graph = nx.DiGraph()
 
         graph.add_node(0, probabilities={0: 0, 1: 1})
         graph.add_node(1, probabilities={0: {0: 0, 1: 1}, 1: {0: 1, 1: 0}})

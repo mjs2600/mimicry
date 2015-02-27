@@ -9,7 +9,7 @@ np.set_printoptions(precision=4)
 
 
 class Mimic(object):
-    def __init__(self, domain, fitness_function, samples=1000, percentile=50):
+    def __init__(self, domain, fitness_function, samples=1000, percentile=0.90):
         self.domain = domain
         self.samples = samples
         initial_samples = np.array(self._generate_initial_samples())
@@ -20,7 +20,10 @@ class Mimic(object):
     def fit(self):
         samples = self.sample_set.get_percentile(self.percentile)
         self.distribution = Distribution(samples)
-        self.sample_set = SampleSet(self.distribution.generate_samples())
+        self.sample_set = SampleSet(
+            self.distribution.generate_samples(self.samples),
+            self.fitness_function,
+        )
         return self.sample_set.get_percentile(self.percentile)
 
     def _generate_initial_samples(self):
@@ -28,7 +31,7 @@ class Mimic(object):
 
     def _generate_initial_sample(self):
         return [random.randint(self.domain[i][0], self.domain[i][1])
-                for i in range(len(self.domain))]
+                for i in xrange(len(self.domain))]
 
 
 class SampleSet(object):
@@ -56,6 +59,7 @@ class Distribution(object):
         self.samples = samples
         self.complete_graph = self._generate_mutual_information_graph()
         self.spanning_graph = self._generate_spanning_graph()
+        self._generate_bayes_net()
 
     def generate_samples(self, number_to_generate):
         sample_len = len(self.bayes_net.node)
@@ -107,7 +111,7 @@ class Distribution(object):
                                             (np.max(parent_array)+1),
                                             )[0] / float(parent_array.shape[0])
 
-                self.bayes_net.node[parent] = dict(enumerate(parent_probs))
+                self.bayes_net.node[parent]["probabilities"] = dict(enumerate(parent_probs))
 
             child_array = samples[:, child]
 
@@ -136,7 +140,10 @@ class Distribution(object):
         complete_graph = nx.complete_graph(samples.shape[1])
 
         for edge in complete_graph.edges():
-            mutual_info = mutual_info_score(samples[edge[0]], samples[edge[1]])
+            mutual_info = mutual_info_score(
+                samples[:, edge[0]],
+                samples[:, edge[1]]
+            )
 
             complete_graph.edge[edge[0]][edge[1]]['weight'] = -mutual_info
 
