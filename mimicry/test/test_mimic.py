@@ -22,9 +22,9 @@ class TestMimic(unittest.TestCase):
         self.assertTrue(np.equal(top_samples, expected_results).all())
 
     def test_mimic(self):
-        domain = [(0, 1)] * 15
+        domain = [(0, 1)] * 7
         m = mimic.Mimic(domain, sum, samples=100)
-        for i in xrange(20):
+        for i in xrange(25):
             # print np.average([sum(sample) for sample in m.fit()[:5]])
             m.fit()
         results = m.fit()
