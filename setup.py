@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='mimicry',
-    version='0.1.0',
+    version='0.2.0',
     author='M. Simpson, J. McGehee',
     author_email= 'mjs2600@gmail.com, jlmcgehee21@gmail.com',
     packages=['mimicry'],
