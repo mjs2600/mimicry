@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='mimicry',
-    version='0.2.1',
+    version='0.2.2',
     author='M. Simpson, J. McGehee',
     author_email= 'mjs2600@gmail.com, jlmcgehee21@gmail.com',
     packages=['mimicry'],
