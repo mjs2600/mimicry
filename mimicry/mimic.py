@@ -72,7 +72,7 @@ class Distribution(object):
             for i in xrange(number_to_generate):
                 parent_val = samples[i, parent]
                 current_node = self.bayes_net.node[current]
-                cond_dist = current_node["probabilities"][parent_val]
+                cond_dist = current_node["probabilities"][int(parent_val)]
                 values = cond_dist.keys()
                 probabilities = cond_dist.values()
                 dist = stats.rv_discrete(
