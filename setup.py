@@ -10,7 +10,7 @@ setup(
 #     url='http://pypi.python.org/pypi/mimicry/', #If we actually want to upload this to PyPI
     license='MIT', #Unless you prefer another
     description='MIMIC Randomized Optimization Algorithm in Python',
-    long_description='MIMIC Randomized Optimization Algorithm in Python'
+    long_description='MIMIC Randomized Optimization Algorithm in Python',
     install_requires=[
         "numpy >= 1.8, <2.0",
         "networkx >= 1.9.1, <2.0",
