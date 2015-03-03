@@ -11,7 +11,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-.. automodule:: mimic
+.. automodule:: mimicry.mimic
 
 .. autoclass:: Mimic
     :members:
