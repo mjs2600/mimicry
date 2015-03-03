@@ -84,13 +84,14 @@ class Distribution(object):
         self._generate_bayes_net()
 
     def generate_samples(self, number_to_generate):
+        root = 0
         sample_len = len(self.bayes_net.node)
         samples = np.zeros((number_to_generate, sample_len))
-        values = self.bayes_net.node[0]["probabilities"].keys()
-        probabilities = self.bayes_net.node[0]["probabilities"].values()
+        values = self.bayes_net.node[root]["probabilities"].keys()
+        probabilities = self.bayes_net.node[root]["probabilities"].values()
         dist = stats.rv_discrete(name="dist", values=(values, probabilities))
         samples[:, 0] = dist.rvs(size=number_to_generate)
-        for parent, current in self.bayes_net.edges_iter():
+        for parent, current in nx.bfs_edges(self.bayes_net, root):
             for i in xrange(number_to_generate):
                 parent_val = samples[i, parent]
                 current_node = self.bayes_net.node[current]
