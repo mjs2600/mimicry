@@ -4,6 +4,7 @@ import numpy as np
 import random
 from scipy import stats
 from sklearn.metrics import mutual_info_score
+from collections import OrderedDict
 
 np.set_printoptions(precision=4)
 
@@ -72,7 +73,9 @@ class SampleSet(object):
 
     def get_percentile(self, percentile):
         fit_samples = self.calculate_fitness()
-        index = int(len(fit_samples) * percentile)
+
+        index = int(len(fit_samples) * (percentile))
+
         return fit_samples[:index]
 
 
@@ -90,18 +93,31 @@ class Distribution(object):
         probabilities = self.bayes_net.node[0]["probabilities"].values()
         dist = stats.rv_discrete(name="dist", values=(values, probabilities))
         samples[:, 0] = dist.rvs(size=number_to_generate)
-        for parent, current in self.bayes_net.edges_iter():
-            for i in xrange(number_to_generate):
-                parent_val = samples[i, parent]
-                current_node = self.bayes_net.node[current]
-                cond_dist = current_node["probabilities"][int(parent_val)]
-                values = cond_dist.keys()
-                probabilities = cond_dist.values()
-                dist = stats.rv_discrete(
-                    name="dist",
-                    values=(values, probabilities)
-                )
-                samples[i, current] = dist.rvs()
+
+        try:
+            print(self.bayes_net.edges())
+            for parent, current in self.bayes_net.edges_iter():
+                print(parent, current)
+                for i in xrange(number_to_generate):
+                    parent_val = samples[i, parent]
+                    current_node = self.bayes_net.node[current]
+                    print(self.bayes_net.node[parent])
+                    # print(parent_val)
+                    print(current_node)
+                    print("\n")
+                    cond_dist = current_node["probabilities"][int(parent_val)]
+                    values = cond_dist.keys()
+                    probabilities = cond_dist.values()
+                    dist = stats.rv_discrete(
+                        name="dist",
+                        values=(values, probabilities)
+                    )
+                    samples[i, current] = dist.rvs()
+        except KeyError:
+            print("Error with parent_val %d"%parent_val)
+            print(samples[:, parent])
+            self.plot_bayes_net()
+
 
         return samples
 
@@ -125,35 +141,104 @@ class Distribution(object):
 
         for parent, child in self.bayes_net.edges():
 
-            parent_array = samples[:, parent]
+            parent_array = samples[:, parent].astype(int)
+
+            # print(np.unique(parent_array).shape)
 
             # Check if node is root
             if not self.bayes_net.predecessors(parent):
-                parent_probs = np.histogram(parent_array,
-                                            (np.max(parent_array)+1),
-                                            )[0] / float(parent_array.shape[0])
 
-                self.bayes_net.node[parent]["probabilities"] = dict(enumerate(parent_probs))
 
-            child_array = samples[:, child]
+                # parent_probs = np.histogram(parent_array,
+                #                             (np.unique(parent_array).shape[0]+1),
+                #                             )[0] / float(parent_array.shape[0])
+                #
+                # print(parent_array+np.abs(np.min(parent_array)))
+
+                binning_array = parent_array
+                if np.min(binning_array) < 0:
+                    binning_array += np.abs(np.min(parent_array))
+
+                parent_probs = np.bincount(binning_array)/float(parent_array.shape[0])
+
+                # self.bayes_net.node[parent]["probabilities"] = dict(enumerate(parent_probs))
+
+                # print(dict(enumerate(parent_probs)))
+                # print(dict(zip(list(OrderedDict.fromkeys(parent_array)), parent_probs.tolist())))
+
+                # print(np.unique(np.sort(parent_array)))
+                self.bayes_net.node[parent]["probabilities"] = dict(zip(np.unique(np.sort(parent_array)).tolist(), parent_probs.tolist()))
+                # print(self.bayes_net.node[parent]["probabilities"])
+
+            child_array = samples[:, child].astype(int)
 
             unique_parents = np.unique(parent_array)
+            print(unique_parents)
             for parent_val in unique_parents:
+                # print(parent_val)
                 parent_inds = np.argwhere(parent_array == parent_val)
                 sub_child = child_array[parent_inds]
+                sub_child = sub_child.flatten()
+
+                # print(sub_child)
+                # print(sub_child.shape)
 
 
-                child_probs = np.histogram(sub_child,
-                                           (np.max(sub_child)+1),
-                                           )[0] / float(sub_child.shape[0])
+                # child_probs = np.histogram(sub_child,
+                #                            (np.unique(child_array).shape[0]+1),
+                #                            )[0] / float(sub_child.shape[0])
 
-                # If P(0) = 1 then child_probs = [1.]
-                # must append zeros to ensure output consistency
-                while child_probs.shape[0] < unique_parents.shape[0]:
+                binning_array = sub_child
+                if np.min(binning_array) < 0:
+                    binning_array += np.abs(np.min(binning_array))
+
+                child_probs = np.bincount(binning_array)/float(sub_child.shape[0])
+
+                # print(child_probs)
+
+                # # If P(0) = 1 then child_probs = [1.]
+                # # must append zeros to ensure output consistency
+                # while child_probs.shape[0] < unique_parents.shape[0]:
+                while child_probs.shape[0] < np.unique(child_array).max() + 1:
                     child_probs = np.append(child_probs, 0.)
-                self.bayes_net.node[child][parent_val] = dict(enumerate(child_probs))
+
+                # self.bayes_net.node[child][parent_val] = dict(enumerate(child_probs))
+
+                # self.bayes_net.node[child][parent_val] = dict(zip(list(dict(enumerate(child_probs))), child_probs.tolist()))
+                # print(sub_child)
+                # print(np.unique(np.sort(child_array)))
+                # print(child_probs)
+                # self.bayes_net.node[child][parent_val] = dict(zip(list(OrderedDict.fromkeys(sub_child)), child_probs.tolist()))
+
+                self.bayes_net.node[child][parent_val] = dict(zip(np.unique(np.sort(child_array)).tolist(), child_probs[np.unique(np.sort(child_array))].tolist()))
+
+                # print(dict(zip(np.unique(np.sort(child_array)).tolist(), child_probs[np.unique(np.sort(child_array))].tolist())))
+                # print(dict(enumerate(child_probs)))
+
 
             self.bayes_net.node[child] = dict(probabilities=self.bayes_net.node[child])
+
+            # print(self.bayes_net.node[parent])
+            # print(self.bayes_net.node[child])
+
+
+    def plot_bayes_net(self):
+        pos = nx.spring_layout(self.spanning_graph)
+
+        edge_labels = dict(
+            [((u, v,), d['weight'])
+             for u, v, d in self.spanning_graph.edges(data=True)]
+        )
+
+        nx.draw_networkx(self.spanning_graph, pos)
+        nx.draw_networkx_edge_labels(
+            mimic.distribution.spanning_graph,
+            pos,
+            edge_labels=edge_labels,
+        )
+
+        plt.show()
+
 
     def _generate_spanning_graph(self):
         return nx.prim_mst(self.complete_graph)
@@ -174,35 +259,82 @@ class Distribution(object):
 
 
 if __name__ == "__main__":
-    samples = [
-        [1, 0, 0, 1],
-        [1, 0, 1, 1],
-        [0, 1, 1, 0],
-        [0, 1, 1, 1],
-        [0, 1, 1, 0],
-        [1, 0, 1, 1],
-        [1, 0, 0, 0],
-    ]
+    # samples = [
+    #     [1, 0, 0, 1],
+    #     [1, 0, 1, 1],
+    #     [0, 1, 1, 0],
+    #     [0, 1, 1, 1],
+    #     [0, 1, 1, 0],
+    #     [1, 0, 1, 1],
+    #     [1, 0, 0, 0],
+    # ]
+    #
+    # distribution = Distribution(samples)
+    #
+    # distribution._generate_bayes_net()
+    #
+    # for node_ind in distribution.bayes_net.nodes():
+    #         print(distribution.bayes_net.node[node_ind])
+    #
+    # pos = nx.spring_layout(distribution.spanning_graph)
+    #
+    # edge_labels = dict(
+    #     [((u, v,), d['weight'])
+    #      for u, v, d in distribution.spanning_graph.edges(data=True)]
+    # )
+    #
+    # nx.draw_networkx(distribution.spanning_graph, pos)
+    # nx.draw_networkx_edge_labels(
+    #     distribution.spanning_graph,
+    #     pos,
+    #     edge_labels=edge_labels,
+    # )
+    #
+    # plt.show()
 
-    distribution = Distribution(samples)
+    mimic = Mimic([(0,10)]*8,sum, samples=25, percentile=1.)
 
-    distribution._generate_bayes_net()
+    # mimic.fit()
+    #
+    # mimic.distribution._generate_bayes_net()
+    #
+    # # for node_ind in mimic.distribution.bayes_net.nodes():
+    # #         print(distribution.bayes_net.node[node_ind])
+    #
+    # pos = nx.spring_layout(mimic.distribution.spanning_graph)
+    #
+    # edge_labels = dict(
+    #     [((u, v,), d['weight'])
+    #      for u, v, d in mimic.distribution.spanning_graph.edges(data=True)]
+    # )
+    #
+    # nx.draw_networkx(mimic.distribution.spanning_graph, pos)
+    # nx.draw_networkx_edge_labels(
+    #     mimic.distribution.spanning_graph,
+    #     pos,
+    #     edge_labels=edge_labels,
+    # )
+    #
+    # plt.show()
 
-    for node_ind in distribution.bayes_net.nodes():
-            print(distribution.bayes_net.node[node_ind])
+    results_mimic =[]
+    for i in range(50):
+        # print(i)
+        results_mimic.append(mimic.fit()[0])
 
-    pos = nx.spring_layout(distribution.spanning_graph)
 
-    edge_labels = dict(
-        [((u, v,), d['weight'])
-         for u, v, d in distribution.spanning_graph.edges(data=True)]
-    )
 
-    nx.draw_networkx(distribution.spanning_graph, pos)
-    nx.draw_networkx_edge_labels(
-        distribution.spanning_graph,
-        pos,
-        edge_labels=edge_labels,
-    )
+    results_mimic = [sum(results) for results in results_mimic]
+
+    results_mimic = np.asarray(results_mimic).flatten()
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    ax.plot(results_mimic, label='Mimic')
+
 
     plt.show()
+
+
+
