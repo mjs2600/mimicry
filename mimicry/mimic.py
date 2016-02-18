@@ -33,20 +33,28 @@ class Mimic(object):
         self.fitness_function = fitness_function
         self.percentile = percentile
 
-    def fit(self):
+        self.records = []
+
+    def fit(self, n=1):
         """
         Run this to perform one iteration of the Mimic algorithm
 
         :return: A list containing the top percentile of data points
         """
+        top_percentile = self.sample_set.get_percentile(self.percentile)
+        for i in range(n):
+            print(i)
+            self.distribution = Distribution(top_percentile)
+            self.sample_set = SampleSet(
+                self.distribution.generate_samples(self.samples),
+                self.fitness_function,
+            )
 
-        samples = self.sample_set.get_percentile(self.percentile)
-        self.distribution = Distribution(samples)
-        self.sample_set = SampleSet(
-            self.distribution.generate_samples(self.samples),
-            self.fitness_function,
-        )
-        return self.sample_set.get_percentile(self.percentile)
+            top_percentile = self.sample_set.get_percentile(self.percentile)
+            top_member = top_percentile[0]
+            self.records.append((top_percentile, self.fitness_function(top_member)))
+
+        return top_percentile
 
     def _generate_initial_samples(self):
         return [self._generate_initial_sample() for i in xrange(self.samples)]
