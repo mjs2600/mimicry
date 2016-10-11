@@ -121,39 +121,33 @@ class Distribution(object):
         root = 0
 
         samples = np.asarray(self.samples)
-
         self.bayes_net = nx.bfs_tree(self.spanning_graph, root)
 
         for parent, child in self.bayes_net.edges():
-
             parent_array = samples[:, parent]
 
-            # Check if node is root
+            # if node is not root, get probability of each gene appearing in parent
             if not self.bayes_net.predecessors(parent):
-                parent_probs = np.histogram(parent_array,
-                                            (np.max(parent_array)+1),
-                                            )[0] / float(parent_array.shape[0])
+                freqs = np.histogram(parent_array,len(np.unique(parent_array)))[0]
+                parent_probs = dict(zip(np.unique(parent_array),freqs/(sum(freqs)*1.0)))
+                
+                self.bayes_net.node[parent]["probabilities"] = {x:0 for x in range(len(self.samples))}
+                self.bayes_net.node[parent]["probabilities"].update(parent_probs)
 
-                self.bayes_net.node[parent]["probabilities"] = dict(enumerate(parent_probs))
-
+                
             child_array = samples[:, child]
 
             unique_parents = np.unique(parent_array)
             for parent_val in unique_parents:
                 parent_inds = np.argwhere(parent_array == parent_val)
                 sub_child = child_array[parent_inds]
-
-
-                child_probs = np.histogram(sub_child,
-                                           (np.max(sub_child)+1),
-                                           )[0] / float(sub_child.shape[0])
-
-                # If P(0) = 1 then child_probs = [1.]
-                # must append zeros to ensure output consistency
-                while child_probs.shape[0] < unique_parents.shape[0]:
-                    child_probs = np.append(child_probs, 0.)
-                self.bayes_net.node[child][parent_val] = dict(enumerate(child_probs))
-
+                
+                freqs = np.histogram(sub_child,len(np.unique(sub_child)))[0]
+                child_probs = dict(zip(np.unique(sub_child),freqs/(sum(freqs)*1.0)))
+                
+                self.bayes_net.node[child][parent_val] = {x:0 for x in range(len(self.samples))}
+                self.bayes_net.node[child][parent_val].update(child_probs)
+                
             self.bayes_net.node[child] = dict(probabilities=self.bayes_net.node[child])
 
     def _generate_spanning_graph(self):
